@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Gtk;
 using Cairo;
 using Gdk;
@@ -7,9 +7,9 @@ using Gdk;
 public class TreeNode
 {
 	public int Value; // number in the node
-	public TreeNode Left;
-	public TreeNode Right;
-	public int Height; 
+	public TreeNode? Left;
+	public TreeNode? Right;
+	public int Height;
 
 	public double X, Y; // position on screen
 
@@ -23,42 +23,51 @@ public class TreeNode
 // this is the avl tree logic
 public class AVLTree
 {
-	public TreeNode Root = null;
+	private TreeNode? root = null;
 
-	// get height of a node
-	public int GetHeight(TreeNode node) => node?.Height ?? 0;
+	public TreeNode? Root => root;
 
-	// get balance of a node
-	public int GetBalance(TreeNode node) => node == null ? 0 : GetHeight(node.Left) - GetHeight(node.Right);
-
-	// insert a number into the tree
-	public TreeNode Insert(TreeNode node, int value)
+	public void Insert(int value)
 	{
-		if (node == null) return new TreeNode(value);
+		root = Insert(root, value);
+	}
+
+	public void Delete(int value)
+	{
+		root = Delete(root, value);
+	}
+
+	public int GetHeight(TreeNode? node) => node?.Height ?? 0;
+
+	public int GetBalance(TreeNode? node) =>
+		node == null ? 0 : GetHeight(node.Left) - GetHeight(node.Right);
+
+	private TreeNode Insert(TreeNode? node, int value)
+	{
+		if (node == null)
+			return new TreeNode(value);
 
 		if (value < node.Value)
 			node.Left = Insert(node.Left, value);
 		else if (value > node.Value)
 			node.Right = Insert(node.Right, value);
 		else
-			return node; // no repeat values
+			return node; // no duplicate values
 
-		// update height
 		node.Height = Math.Max(GetHeight(node.Left), GetHeight(node.Right)) + 1;
 
 		int balance = GetBalance(node);
 
-		// balance the tree
-		if (balance > 1 && value < node.Left.Value)
+		if (balance > 1 && value < node.Left!.Value)
 			return RotateRight(node);
-		if (balance < -1 && value > node.Right.Value)
+		if (balance < -1 && value > node.Right!.Value)
 			return RotateLeft(node);
-		if (balance > 1 && value > node.Left.Value)
+		if (balance > 1 && value > node.Left!.Value)
 		{
 			node.Left = RotateLeft(node.Left);
 			return RotateRight(node);
 		}
-		if (balance < -1 && value < node.Right.Value)
+		if (balance < -1 && value < node.Right!.Value)
 		{
 			node.Right = RotateRight(node.Right);
 			return RotateLeft(node);
@@ -67,10 +76,10 @@ public class AVLTree
 		return node;
 	}
 
-	// delete a number from the tree
-	public TreeNode Delete(TreeNode node, int value)
+	private TreeNode? Delete(TreeNode? node, int value)
 	{
-		if (node == null) return null;
+		if (node == null)
+			return null;
 
 		if (value < node.Value)
 			node.Left = Delete(node.Left, value);
@@ -78,11 +87,9 @@ public class AVLTree
 			node.Right = Delete(node.Right, value);
 		else
 		{
-			// node has 0 or 1 child
 			if (node.Left == null) return node.Right;
 			if (node.Right == null) return node.Left;
 
-			// node has 2 children
 			TreeNode min = node.Right;
 			while (min.Left != null)
 				min = min.Left;
@@ -91,12 +98,10 @@ public class AVLTree
 			node.Right = Delete(node.Right, min.Value);
 		}
 
-		// update height
 		node.Height = Math.Max(GetHeight(node.Left), GetHeight(node.Right)) + 1;
 
 		int balance = GetBalance(node);
 
-		// balance tree after delete
 		if (balance > 1 && GetBalance(node.Left) >= 0)
 			return RotateRight(node);
 		if (balance > 1 && GetBalance(node.Left) < 0)
@@ -115,11 +120,10 @@ public class AVLTree
 		return node;
 	}
 
-	// right rotate
 	private TreeNode RotateRight(TreeNode y)
 	{
-		TreeNode x = y.Left;
-		TreeNode T2 = x.Right;
+		TreeNode x = y.Left!;
+		TreeNode? T2 = x.Right;
 
 		x.Right = y;
 		y.Left = T2;
@@ -130,11 +134,10 @@ public class AVLTree
 		return x;
 	}
 
-	// left rotate
 	private TreeNode RotateLeft(TreeNode x)
 	{
-		TreeNode y = x.Right;
-		TreeNode T2 = y.Left;
+		TreeNode y = x.Right!;
+		TreeNode? T2 = y.Left;
 
 		y.Left = x;
 		x.Right = T2;
@@ -155,7 +158,7 @@ public class AVLTreeApp : Gtk.Window
 	Label message;
 
 	AVLTree tree = new AVLTree();
-	TreeNode hoveredNode = null;
+	TreeNode? hoveredNode = null;
 
 	const double Radius = 20;
 	const double XGap = 50;
@@ -163,12 +166,10 @@ public class AVLTreeApp : Gtk.Window
 
 	public AVLTreeApp() : base("AVL Tree")
 	{
-		// set up window
 		SetDefaultSize(800, 600);
 		SetPosition(Gtk.WindowPosition.Center);
 		DeleteEvent += (o, e) => Application.Quit();
 
-		// layout boxes
 		VBox layout = new VBox(false, 5);
 		HBox inputBox = new HBox(false, 5);
 
@@ -195,12 +196,11 @@ public class AVLTreeApp : Gtk.Window
 		ShowAll();
 	}
 
-	// when insert button is clicked
-	void OnInsertClicked(object sender, EventArgs e)
+	void OnInsertClicked(object? sender, EventArgs e)
 	{
 		if (int.TryParse(input.Text, out int val))
 		{
-			tree.Root = tree.Insert(tree.Root, val);
+			tree.Insert(val);
 			input.Text = "";
 			message.Text = $"Inserted {val}";
 			UpdatePositions();
@@ -212,14 +212,12 @@ public class AVLTreeApp : Gtk.Window
 		}
 	}
 
-	// set all node positions for drawing
 	void UpdatePositions()
 	{
 		SetPositions(tree.Root, 400, 40, 200);
 	}
 
-	// place each node on screen
-	void SetPositions(TreeNode node, double x, double y, double offset)
+	void SetPositions(TreeNode? node, double x, double y, double offset)
 	{
 		if (node == null) return;
 
@@ -230,12 +228,9 @@ public class AVLTreeApp : Gtk.Window
 		SetPositions(node.Right, x + offset, y + YGap, offset / 2);
 	}
 
-	// draw tree
 	void OnDraw(object sender, DrawnArgs args)
 	{
 		Context cr = args.Cr;
-
-		// white background
 		cr.SetSourceRGB(1, 1, 1);
 		cr.Paint();
 
@@ -247,8 +242,7 @@ public class AVLTreeApp : Gtk.Window
 		DrawNodes(cr, tree.Root);
 	}
 
-	// draw lines between nodes
-	void DrawEdges(Context cr, TreeNode node)
+	void DrawEdges(Context cr, TreeNode? node)
 	{
 		if (node == null) return;
 
@@ -269,15 +263,14 @@ public class AVLTreeApp : Gtk.Window
 		}
 	}
 
-	// draw each node
-	void DrawNodes(Context cr, TreeNode node)
+	void DrawNodes(Context cr, TreeNode? node)
 	{
 		if (node == null) return;
 
 		bool isHovered = (node == hoveredNode);
 
 		if (isHovered)
-			cr.SetSourceRGB(1, 0.5, 0); 
+			cr.SetSourceRGB(1, 0.5, 0);
 		else
 			cr.SetSourceRGB(0.3, 0.6, 1);
 
@@ -286,7 +279,6 @@ public class AVLTreeApp : Gtk.Window
 		cr.SetSourceRGB(0, 0, 0);
 		cr.Stroke();
 
-		// draw number
 		string text = node.Value.ToString();
 		TextExtents te = cr.TextExtents(text);
 		cr.MoveTo(node.X - te.Width / 2, node.Y + te.Height / 2);
@@ -297,7 +289,6 @@ public class AVLTreeApp : Gtk.Window
 		DrawNodes(cr, node.Right);
 	}
 
-	// check if mouse is on a node
 	void OnMouseMove(object sender, MotionNotifyEventArgs args)
 	{
 		double mx = args.Event.X;
@@ -308,8 +299,7 @@ public class AVLTreeApp : Gtk.Window
 		drawing.QueueDraw();
 	}
 
-	// find which node is hovered
-	void FindHovered(TreeNode node, double mx, double my)
+	void FindHovered(TreeNode? node, double mx, double my)
 	{
 		if (node == null) return;
 
@@ -326,20 +316,18 @@ public class AVLTreeApp : Gtk.Window
 		FindHovered(node.Right, mx, my);
 	}
 
-	// if user double clicks, delete that node
 	void OnMouseClick(object sender, ButtonPressEventArgs args)
 	{
 		if (args.Event.Type == EventType.TwoButtonPress && hoveredNode != null)
 		{
 			int val = hoveredNode.Value;
-			tree.Root = tree.Delete(tree.Root, val);
+			tree.Delete(val);
 			message.Text = $"Deleted {val}";
 			UpdatePositions();
 			drawing.QueueDraw();
 		}
 	}
 
-	// start the app
 	public static void Main()
 	{
 		Application.Init();
