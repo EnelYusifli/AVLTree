@@ -1,14 +1,14 @@
-User Documentation//
-Usage
+#User Documentation
+##Usage
 Run the app. Type a number in the box. Click Insert to add it or Delete to remove it. After that, use Prev and Next to step through what happened. The canvas shows the tree with circles (nodes) and lines (edges), and a message tells you what’s going on. Close the window to quit.
 
-Developer Documentation//
+#Developer Documentation
 The code has two main parts: AVLTree for the tree logic and AVLTreeApp for the UI and drawing. It uses TreeNode for nodes and TreeOperationStep to save snapshots of the tree for each step.
 
-TreeNode
+##TreeNode
 This is a node in the tree. It holds a value, left and right children, a height for balancing, and X, Y for where to draw it. The Clone function copies the node and its children for caching.
 
-AVLTree
+##AVLTree
 This class runs the show for the tree. It keeps the root node and a list of steps to track changes.
 
 GetHeight: Grabs a node’s height. Used to check balance and update heights.
@@ -21,7 +21,7 @@ Insert: The recursive insert function. Adds a node, updates heights, and rotates
 Delete: Removes a node recursively. Handles cases like no children, one child, or two children. Updates heights, rotates if needed, and logs steps.
 RotateRight & RotateLeft: Fix imbalances by rearranging nodes. Updates heights and the root if needed, then logs the step.
 
-AVLTreeApp
+##AVLTreeApp
 This is the GTK window with the UI and drawing.
 
 AVLTreeApp: Sets up the window, text box, buttons (Insert, Delete, Prev, Next), and canvas. Ties buttons to actions.
